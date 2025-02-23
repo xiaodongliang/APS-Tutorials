@@ -1,0 +1,836 @@
+{
+	"info": {
+		"_postman_id": "8df133d0-f128-4683-ab7d-585432e15de4",
+		"name": "Download/Upload with ACC/BIM360",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1440859"
+	},
+	"item": [
+		{
+			"name": "Prerequistes",
+			"item": [
+				{
+					"name": "Get Accounts/Hubs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"var hubName = pm.environment.get(\"hubName\");",
+									"var hubId = resonse.data.find(i=>i.attributes.name==hubName).id ",
+									"pm.environment.set(\"hubId\",hubId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/project/v1/hubs",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"project",
+								"v1",
+								"hubs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get projects",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"var projectName = pm.environment.get(\"projectName\");",
+									"var projectId = resonse.data.find(i=>i.attributes.name==projectName).id ",
+									"pm.environment.set(\"projectId\",projectId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/project/v1/hubs/:hubId/projects",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"project",
+								"v1",
+								"hubs",
+								":hubId",
+								"projects"
+							],
+							"variable": [
+								{
+									"key": "hubId",
+									"value": "{{hubId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project File Folder",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"var projectFileFolderUrn = resonse.data.find(i=>i.attributes.name==\"Project Files\").id ",
+									"pm.environment.set(\"projectFileFolderUrn\",projectFileFolderUrn);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/project/v1/hubs/:hubId/projects/:projectId/topFolders",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"project",
+								"v1",
+								"hubs",
+								":hubId",
+								"projects",
+								":projectId",
+								"topFolders"
+							],
+							"variable": [
+								{
+									"key": "hubId",
+									"value": "{{hubId}}"
+								},
+								{
+									"key": "projectId",
+									"value": "{{projectId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project File Folder Contents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"var downloadItemName = pm.environment.get(\"downloadItemName\");",
+									"var downloadItemUrn = resonse.data.find(i=> i.type==\"items\" && i.attributes.displayName==downloadItemName).id",
+									"pm.environment.set(\"downloadItemUrn\",downloadItemUrn);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/data/v1/projects/:projectId/folders/:folderId/contents",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"data",
+								"v1",
+								"projects",
+								":projectId",
+								"folders",
+								":folderId",
+								"contents"
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": "{{projectId}}"
+								},
+								{
+									"key": "folderId",
+									"value": "{{projectFileFolderUrn}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Download",
+			"item": [
+				{
+					"name": "Get One Item and Its Storage Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"var storageId = resonse.included[0].relationships.storage.data.id",
+									"pm.environment.set(\"storageId\",storageId);",
+									"const parsedData = storageId.match('^urn:adsk\\.objects:os\\.object:([-_.a-z0-9]{3,128})\\/(.+)$');",
+									"const bucketKey = parsedData[1];",
+									"const objectKey = parsedData[2];",
+									"pm.environment.set(\"bucketKey\",bucketKey);",
+									"pm.environment.set(\"objectKey\",objectKey);",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/data/v1/projects/:project_id/items/:item_id",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"data",
+								"v1",
+								"projects",
+								":project_id",
+								"items",
+								":item_id"
+							],
+							"variable": [
+								{
+									"key": "project_id",
+									"value": "{{projectId}}"
+								},
+								{
+									"key": "item_id",
+									"value": "{{downloadItemUrn}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET S3 signed Url",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"var downloadUrl = resonse.url;",
+									"pm.environment.set(\"downloadUrl\",downloadUrl);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/oss/v2/buckets/:bucketKey/objects/:objectKey/signeds3download",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"oss",
+								"v2",
+								"buckets",
+								":bucketKey",
+								"objects",
+								":objectKey",
+								"signeds3download"
+							],
+							"variable": [
+								{
+									"key": "bucketKey",
+									"value": "{{bucketKey}}"
+								},
+								{
+									"key": "objectKey",
+									"value": "{{objectKey}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "download binary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{downloadUrl}}",
+							"host": [
+								"{{downloadUrl}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Upload",
+			"item": [
+				{
+					"name": "Create Storage and Get bucket and object keys",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									"const newStorageId = resonse.data.id;",
+									"const parsedData = newStorageId.match('^urn:adsk\\.objects:os\\.object:([-_.a-z0-9]{3,128})\\/(.+)$');",
+									"const bucketKey = parsedData[1];",
+									"const objectKey = parsedData[2];",
+									"pm.environment.set(\"newStorageId\",newStorageId); ",
+									"pm.environment.set(\"bucketKey\",bucketKey);",
+									"pm.environment.set(\"objectKey\",objectKey); "
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.api+json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{newItemName}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{projectFileFolderUrn}}\"\n              }\n            }\n          }\n        }\n      }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/data/v1/projects/:project_id/storage",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"data",
+								"v1",
+								"projects",
+								":project_id",
+								"storage"
+							],
+							"variable": [
+								{
+									"key": "project_id",
+									"value": "{{projectId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET S3 signed upload url",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var resonse = JSON.parse(pm.response.text());",
+									" pm.environment.set(\"uploadKey\",resonse.uploadKey);",
+									" pm.environment.set(\"uploadUrl\",resonse.urls[0]);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://developer.api.autodesk.com/oss/v2/buckets/:bucketKey/objects/:objectKey/signeds3upload",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"oss",
+								"v2",
+								"buckets",
+								":bucketKey",
+								"objects",
+								":objectKey",
+								"signeds3upload"
+							],
+							"variable": [
+								{
+									"key": "bucketKey",
+									"value": "{{bucketKey}}"
+								},
+								{
+									"key": "objectKey",
+									"value": "{{objectKey}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Binary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/Users/liangx/Downloads/321524f3-3fe7-4326-b7f5-7df0034a5b3c.nwd"
+							}
+						},
+						"url": {
+							"raw": "{{uploadUrl}}",
+							"host": [
+								"{{uploadUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Uploading",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uploadKey\": \"{{uploadKey}}\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/oss/v2/buckets/:bucketKey/objects/:objectKey/signeds3upload",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"oss",
+								"v2",
+								"buckets",
+								":bucketKey",
+								"objects",
+								":objectKey",
+								"signeds3upload"
+							],
+							"variable": [
+								{
+									"key": "bucketKey",
+									"value": "{{bucketKey}}"
+								},
+								{
+									"key": "objectKey",
+									"value": "{{objectKey}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Item (first version)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.api+json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"items\",\n          \"attributes\": {\n            \"displayName\": \"{{newItemName\",\n            \"extension\": {\n              \"type\": \"items:autodesk.bim360:File\",\n              \"version\": \"1.0\"\n            }\n          },\n          \"relationships\": {\n            \"tip\": {\n              \"data\": {\n                \"type\": \"versions\",\n                \"id\": \"1\"\n              }\n            },\n            \"parent\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{projectFileFolderUrn}}\"\n              }\n            }\n          }\n        },\n        \"included\": [\n          {\n            \"type\": \"versions\",\n            \"id\": \"1\",\n            \"attributes\": {\n              \"name\": \"{{newItemName}}\",\n              \"extension\": {\n                \"type\": \"versions:autodesk.bim360:File\",\n                \"version\": \"1.0\"\n              }\n            },\n            \"relationships\": {\n              \"storage\": {\n                \"data\": {\n                  \"type\": \"objects\",\n                  \"id\": \"{{newStorageId}}\"\n                }\n              }\n            }\n          }\n        ]\n      }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/data/v1/projects/:project_id/items",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"data",
+								"v1",
+								"projects",
+								":project_id",
+								"items"
+							],
+							"variable": [
+								{
+									"key": "project_id",
+									"value": "{{projectId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Item (first version) Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.api+json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"items\",\n          \"attributes\": {\n            \"displayName\": \"{{newItemName\",\n            \"extension\": {\n              \"type\": \"items:autodesk.bim360:File\",\n              \"version\": \"1.0\"\n            }\n          },\n          \"relationships\": {\n            \"tip\": {\n              \"data\": {\n                \"type\": \"versions\",\n                \"id\": \"1\"\n              }\n            },\n            \"parent\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{projectFileFolderUrn}}\"\n              }\n            }\n          }\n        },\n        \"included\": [\n          {\n            \"type\": \"versions\",\n            \"id\": \"1\",\n            \"attributes\": {\n              \"name\": \"{{newItemName}}\",\n              \"extension\": {\n                \"type\": \"versions:autodesk.bim360:File\",\n                \"version\": \"1.0\"\n              }\n            },\n            \"relationships\": {\n              \"storage\": {\n                \"data\": {\n                  \"type\": \"objects\",\n                  \"id\": \"{{newStorageId}}\"\n                }\n              }\n            }\n          }\n        ]\n      }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://developer.api.autodesk.com/data/v1/projects/:projectId/versions",
+							"protocol": "https",
+							"host": [
+								"developer",
+								"api",
+								"autodesk",
+								"com"
+							],
+							"path": [
+								"data",
+								"v1",
+								"projects",
+								":projectId",
+								"versions"
+							],
+							"variable": [
+								{
+									"key": "projectId",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2LO Authentication",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var data = JSON.parse(pm.response.text());",
+							"pm.setEnvironmentVariable(\"access_token\", data.access_token);",
+							"pm.setEnvironmentVariable(\"expires_in\", data.expires_in);",
+							"pm.setEnvironmentVariable(\"token_type\", data.token_type);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"",
+							"var keys = pm.environment.get(\"client_id\") + \":\" + pm.environment.get(\"client_secret\");",
+							" ",
+							"console.log(keys)",
+							"let encodedKeys = btoa(keys); ",
+							"console.log(encodedKeys)",
+							"",
+							"pm.environment.set(\"encodedKeys\",encodedKeys);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					},
+					{
+						"key": "Authorization",
+						"value": "Basic {{encodedKeys}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "scope",
+							"value": "data:read data:write",
+							"type": "text"
+						},
+						{
+							"key": "",
+							"value": "",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_domain}}/authentication/v2/token",
+					"host": [
+						"{{base_domain}}"
+					],
+					"path": [
+						"authentication",
+						"v2",
+						"token"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "client_authentication",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "scope",
+				"value": "data:read data:write",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{client_id}}",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{client_secret}}",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "https://developer.api.autodesk.com/authentication/v2/token",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "https://developer.api.autodesk.com/authentication/v2/authorize",
+				"type": "string"
+			},
+			{
+				"key": "redirect_uri",
+				"value": "https://www.getpostman.com/oauth2/callback",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "access_token",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
